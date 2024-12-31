@@ -19,17 +19,18 @@ def setup_multisig():
 
     # Tạo địa chỉ P2SH từ redeem script
     address = P2shAddress.from_script(redeem_script)
-    return private_key1, private_key2, public_key1, public_key2, redeem_script, address
+
+    # Ghi file
+    with open("multisig_info.txt", "w") as file:
+        file.write(f"Private Key 1: {private_key1.to_wif()}\n")
+        file.write(f"Private Key 2: {private_key2.to_wif()}\n")
+        file.write(f"Public Key 1: {public_key1.to_hex()}\n")
+        file.write(f"Public Key 2: {public_key2.to_hex()}\n")
+        file.write(f"Redeem Script: {redeem_script.to_hex()}\n")
+        file.write(f"P2SH Address: {address.to_string()}\n")
 
 def main():
-    # private_key1, private_key2, public_key1, public_key2, redeem_script, address = setup_multisig()
-    # # In kết quả
-    # print("Private Key 1:", private_key1.to_wif())
-    # print("Private Key 2:", private_key2.to_wif())
-    # print("Public Key 1:", public_key1)
-    # print("Public Key 2:", public_key2)
-    # print("Redeem Script:", redeem_script.to_hex())
-    # print("P2SH Address:", address.to_string())
+    
 
     print('haha')
 
