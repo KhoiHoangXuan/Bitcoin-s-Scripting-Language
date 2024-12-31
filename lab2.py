@@ -1,9 +1,26 @@
 from bitcoinutils.setup import setup
-from bitcoinutils.keys import PrivateKey, P2shAddress
+from bitcoinutils.keys import PrivateKey, P2shAddress, P2pkhAddress
 from bitcoinutils.script import Script
 import requests
 from bitcoinutils.transactions import Transaction, TxInput, TxOutput
 
+def broadcast_transaction(tx_hex):
+    url = "https://mempool.space/testnet/api/tx"
+    headers = {"Content-Type": "text/plain"}
+
+    try:
+        response = requests.post(url, data=tx_hex, headers=headers)
+        print(f"Phản hồi từ server: {response.status_code}, {response.text}")
+        
+        if response.status_code == 200:  # Thành công
+            print("Broadcast successfully!")
+            print("Transaction ID (txid):", response.text.strip())
+        else:
+            print(f"Broadcast failed: {response.status_code}, {response.text}")
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 def setup_multisig():
     # Thiết lập môi trường cho Testnet
     setup('testnet')
@@ -23,7 +40,7 @@ def setup_multisig():
     address = P2shAddress.from_script(redeem_script)
 
     # Ghi file
-    with open("multisig_info.txt", "w") as file:
+    with open("list.txt", "w") as file:
         file.write(f"Private Key 1: {private_key1.to_wif()}\n")
         file.write(f"Private Key 2: {private_key2.to_wif()}\n")
         file.write(f"Public Key 1: {public_key1.to_hex()}\n")
@@ -85,7 +102,7 @@ def spend_multisig():
         # Lấy các private key từ tệp
         private_key1f = lines[0].strip().split(": ")[1]  # Dòng đầu tiên là Private Key 1
         private_key2f = lines[1].strip().split(": ")[1]  # Dòng thứ hai là Private Key 2
-
+        destination_address = lines[8].strip().split(": ")[1]
     # Khóa riêng
     private_key1 = PrivateKey(private_key1f)
     private_key2 = PrivateKey(private_key2f)
@@ -105,6 +122,28 @@ def spend_multisig():
 
     # Tạo transaction input
     txin = TxInput(txid, vout)
+    amount_to_send = 2000
+    destination_address = P2pkhAddress(destination_address).to_script_pub_key()
+
+
+    txout = TxOutput(amount_to_send, destination_address)
+    # print(destination_address)
+    tx = Transaction([txin], [txout])
+    # Sign the transaction with the first private key
+    sig1 = private_key1.sign_input(tx, 0, redeem_script)
+
+    # Sign the transaction with the second private key
+    sig2 = private_key2.sign_input(tx, 0, redeem_script)
+
+    # Step 7: Create the scriptSig (including both signatures and the redeem script)
+    script_sig = Script([sig1, sig2])
+    tx.inputs[0].script_sig = script_sig
+    signed_tx = tx.serialize()
+    broadcast_transaction(signed_tx)
+
+
+
+
 
 
 
