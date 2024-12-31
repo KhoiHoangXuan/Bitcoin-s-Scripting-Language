@@ -49,7 +49,7 @@ def setup_multisig():
         file.write(f"P2SH Address: {address.to_string()}\n")
 
 def callAPI(address):
-    url = f'https://blockstream.info/testnet/api/address/{address}/txs'
+    url = f'https://blockstream.info/testnet/api/address/{address}/utxo'
     response = requests.get(url)
 
     # Kiểm tra phản hồi từ API
@@ -60,13 +60,14 @@ def callAPI(address):
         # In ra thông tin giao dịch
         if transactions:
             print(f"Transactions for address {address}:")
-            tx = transactions[0]['vin']
+            tx = transactions[0]
+            print(tx)
             print('hahhqahahhaha\n', tx, '\nahahaha')
-            txid = tx[0]['txid']
+            txid = tx['txid']
             # version = tx['version']
             # locktime = tx['locktime']
             # vin = tx['vin']
-            vout = tx[0]['vout']
+            vout = tx['vout']
             # is_coinbase = tx['is_coinbase']
             # fee = tx['fee']
             # print(f"\nTransaction ID: {txid}")
@@ -122,7 +123,7 @@ def spend_multisig():
 
     # Tạo transaction input
     txin = TxInput(txid, vout)
-    amount_to_send = 2000
+    amount_to_send = 666
     destination_address = P2pkhAddress(destination_address).to_script_pub_key()
 
 
@@ -136,7 +137,8 @@ def spend_multisig():
     sig2 = private_key2.sign_input(tx, 0, redeem_script)
 
     # Step 7: Create the scriptSig (including both signatures and the redeem script)
-    script_sig = Script([sig1, sig2])
+    script_sig = Script(['OP_0', sig1, sig2, redeem_script.to_hex()])
+    # script_sig = Script([sig1, sig2])
     tx.inputs[0].script_sig = script_sig
     signed_tx = tx.serialize()
     broadcast_transaction(signed_tx)
