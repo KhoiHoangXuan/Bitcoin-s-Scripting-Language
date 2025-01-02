@@ -21,81 +21,30 @@ def broadcast_transaction(tx_hex):
     except Exception as e:
         print(f"Error: {e}")
         return None
-def setup_multisig():
-    # Thiết lập môi trường cho Testnet
-    setup('testnet')
 
-    # Tạo hai khóa riêng ngẫu nhiên
-    private_key1 = PrivateKey()
-    private_key2 = PrivateKey()
-
-    # Lấy khóa công khai tương ứng
-    public_key1 = private_key1.get_public_key().to_hex()
-    public_key2 = private_key2.get_public_key().to_hex()
-
-    # Tạo 2-of-2 multisig script
-    redeem_script = Script(['OP_2', public_key1, public_key2, 'OP_2', 'OP_CHECKMULTISIG'])
-
-    # Tạo địa chỉ P2SH từ redeem script
-    address = P2shAddress.from_script(redeem_script)
-
-    # Ghi file
-    with open("list.txt", "w") as file:
-        file.write(f"Private Key 1: {private_key1.to_wif()}\n")
-        file.write(f"Private Key 2: {private_key2.to_wif()}\n")
-        file.write(f"Public Key 1: {public_key1.to_hex()}\n")
-        file.write(f"Public Key 2: {public_key2.to_hex()}\n")
-        file.write(f"Redeem Script: {redeem_script.to_hex()}\n")
-        file.write(f"P2SH Address: {address.to_string()}\n")
 
 def callAPI(address):
     url = f'https://blockstream.info/testnet/api/address/{address}/utxo'
+    print(url)
     response = requests.get(url)
 
     # Kiểm tra phản hồi từ API
     if response.status_code == 200:
         # Chuyển đổi dữ liệu từ JSON
-        transactions = response.json()
+        utxo = response.json()
         
-        # In ra thông tin giao dịch
-        if transactions:
-            print(f"Transactions for address {address}:")
-            tx = transactions[0]
-            print(tx)
-            print('hahhqahahhaha\n', tx, '\nahahaha')
+        # Lấy thông tin UTXO
+        if utxo:
+            tx = utxo[0]
             txid = tx['txid']
-            # version = tx['version']
-            # locktime = tx['locktime']
-            # vin = tx['vin']
             vout = tx['vout']
-            # is_coinbase = tx['is_coinbase']
-            # fee = tx['fee']
-            # print(f"\nTransaction ID: {txid}")
-            # print(f"Version: {version}")
-            # print(f"Locktime: {locktime}")
-            # print(f"Is Coinbase: {is_coinbase}")
-            # print(f"Fee: {fee} satoshis")
-            
-            # # In thông tin inputs (vin)
-            # print("Inputs (vin):")
-            # for input_tx in vin:
-            #     prev_txid = input_tx['txid']
-            #     prev_vout = input_tx['vout']
-            #     prev_address = input_tx['prevout']['scriptpubkey_address']
-            #     value = input_tx['prevout']['value']
-            #     print(f"  TXID: {prev_txid}, Vout: {prev_vout}, Address: {prev_address}, Value: {value} satoshis")
-            
-            # # In thông tin outputs (vout)
-            # print("Outputs (vout):")
-            # for output_tx in vout:
-            #     output_address = output_tx['scriptpubkey_address']
-            #     output_value = output_tx['value']
-            #     print(f"  Address: {output_address}, Value: {output_value} satoshis")
+            value = tx['value']
+            return txid, vout, value
         else:
-            print("No transactions found for this address.")
+            print("No UTXO found for this address.")
     else:
         print(f"Error: {response.status_code}")
-    return txid, vout
+
 
 def spend_multisig():
     with open("list.txt", "r") as file:
@@ -114,21 +63,32 @@ def spend_multisig():
 
     # Tạo 2-of-2 multisig script
     redeem_script = Script(['OP_2', public_key1, public_key2, 'OP_2', 'OP_CHECKMULTISIG'])
-    address = P2shAddress.from_script(redeem_script)
-    print("P2SH Address:", address.to_string())
 
-    txid, vout = callAPI('2Msv6A25gy1p4EAGfMDjFj34bXqspmPavRk')
-    print(txid)
-    print(vout)
+    # Địa chỉ multisig
+    multisig_address = P2shAddress.from_script(redeem_script)
+
+
+    txid, vout, value = callAPI(multisig_address.to_string())
+
 
     # Tạo transaction input
     txin = TxInput(txid, vout)
-    amount_to_send = 666
+
+    # Các thông tin của transaction output
+    amount_to_send = 700
     destination_address = P2pkhAddress(destination_address).to_script_pub_key()
+    fee = 9800
 
-
+    # Tạo transaction output
     txout = TxOutput(amount_to_send, destination_address)
-    # print(destination_address)
+    
+    
+    
+    # Tạo transaction output để chuyển lại tiền thừa cho địa chỉ multisig
+    changes = value - amount_to_send - fee
+    txout_changes = TxOutput(changes, multisig_address.to_script_pub_key())
+
+
     tx = Transaction([txin], [txout])
     # Sign the transaction with the first private key
     sig1 = private_key1.sign_input(tx, 0, redeem_script)
@@ -150,15 +110,6 @@ def spend_multisig():
 
 
 def main():
-    # private_key1, private_key2, public_key1, public_key2, redeem_script, address = setup_multisig()
-    # # In kết quả
-    # print("Private Key 1:", private_key1.to_wif())
-    # print("Private Key 2:", private_key2.to_wif())
-    # print("Public Key 1:", public_key1)
-    # print("Public Key 2:", public_key2)
-    # print("Redeem Script:", redeem_script.to_hex())
-    # print("P2SH Address:", address.to_string())
     spend_multisig()
-    print('haha')
 
 main()
