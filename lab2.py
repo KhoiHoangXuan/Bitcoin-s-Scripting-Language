@@ -6,6 +6,7 @@ from bitcoinutils.transactions import Transaction, TxInput, TxOutput
 import math
 
 def calculate_virtual_size(tx_hex_str):
+    # Tính kích thước của transaction
     total_size = len(tx_hex_str) // 2 # Chuyển từ hex sang bytes vì 2 ký tự hex mới là 1 byte
     return math.ceil(total_size)
 
