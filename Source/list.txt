@@ -1,0 +1,9 @@
+Private Key 1: [REDACTED]
+Private Key 2: [REDACTED]
+Public Key 1: 029098423b6053aa1dbb1d12d6a004f6e6177fafd5117bec374d3e817f7e183489
+Public Key 2: 02fa1f8c69f89ffcdf6c0ad2223a1f4846e042fcc98a5635654bab9f3a1e109c25
+Redeem Script: 5221029098423b6053aa1dbb1d12d6a004f6e6177fafd5117bec374d3e817f7e1834892102fa1f8c69f89ffcdf6c0ad2223a1f4846e042fcc98a5635654bab9f3a1e109c2552ae
+P2SH Address: 2MtANDzfGtwQYM3t2x6zMy1j3EvyDF7ura1
+Private Key recipient: [REDACTED]
+Public Key recipient: 02bf496a1599d2b6133e8d655c8aa948afc0d2793113ad00c36b8bd24e1ec4f152
+Address recipient: mseLDhZfVbP1283jor2xhtVhnTG7zmLtin
